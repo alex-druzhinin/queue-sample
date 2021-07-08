@@ -1,0 +1,45 @@
+version: "3"
+services:
+  consumer:
+    image: adruzh/queue-sample:latest
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+    entrypoint: node build/consumer/consumer.js
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    environment:
+      SERVICE_NAME: consumer
+      NODE_ENV: production
+      DEPLOYMENT: docker
+      RABBIT_URI: "amqp://rabbitmq"
+      REDIS_HOST: "redis"
+
+  producer:
+    image: adruzh/queue-sample:latest
+    depends_on:
+      - rabbitmq
+    restart: on-failure
+    entrypoint: node build/producer/producer.js
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    environment:
+      SERVICE_NAME: producer
+      NODE_ENV: production
+      DEPLOYMENT: docker
+      RABBIT_URI: "amqp://rabbitmq"
+
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    container_name: rabbitmq
